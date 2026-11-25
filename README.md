@@ -10,7 +10,7 @@ Python 3.11+ · Open-Weight SLMs & Cloud VLMs · Deterministic Pydantic/XSD Sche
 
 ---
 
-# docstruct-ai-ai: Extract Structured Data from Any Document
+# docstruct-ai: Extract Structured Data from Any Document
 
 Turn PDFs, scanned pages, and images into **validated JSON, streaming NDJSON, or compliant XML** with a single unified interface. Swap local open-weight VLMs (Ollama, vLLM, LM Studio) and cloud vision APIs without changing your application code. Every extraction is schema-enforced, provenance-tracked, and ready for downstream systems.
 
