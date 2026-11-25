@@ -1,11 +1,16 @@
-# docstruct v0.2.0 
+# docstruct-ai v0.2.0 
 **Model-Agnostic OCR & Structured XML/JSON Library**
+
+Documentation https://thekakodkar.github.io/docstruct-ai/
+
+<img width="769" height="336" alt="image" src="https://github.com/user-attachments/assets/5851aa9b-7041-4cd7-b823-61e7a11085a1" />
+
 
 Python 3.11+ · Open-Weight SLMs & Cloud VLMs · Deterministic Pydantic/XSD Schema Enforcement
 
 ---
 
-# docstruct: Extract Structured Data from Any Document
+# docstruct-ai-ai: Extract Structured Data from Any Document
 
 Turn PDFs, scanned pages, and images into **validated JSON, streaming NDJSON, or compliant XML** with a single unified interface. Swap local open-weight VLMs (Ollama, vLLM, LM Studio) and cloud vision APIs without changing your application code. Every extraction is schema-enforced, provenance-tracked, and ready for downstream systems.
 
@@ -16,7 +21,7 @@ Turn PDFs, scanned pages, and images into **validated JSON, streaming NDJSON, or
 ## Extract an Invoice in 4 Lines
 
 ```python
-from docstruct import DocumentClient, MockProvider, RoutingPolicy
+from docstruct-ai import DocumentClient, MockProvider, RoutingPolicy
 from pydantic import BaseModel
 
 class Invoice(BaseModel):
@@ -75,31 +80,31 @@ print(result.to_xml(root_tag="Invoice", list_item_tags={"lines": "Line"}))
 
 ```bash
 # Core library (Pydantic + httpx + Pillow)
-pip install docstruct
+pip install docstruct-ai
 
 # With PDF rendering (PyMuPDF)
-pip install "docstruct[pdf]"
+pip install "docstruct-ai[pdf]"
 
 # With XSD validation (lxml)
-pip install "docstruct[xml]"
+pip install "docstruct-ai[xml]"
 
 # CLI
-pip install "docstruct[cli]"
+pip install "docstruct-ai[cli]"
 
 # Everything
-pip install "docstruct[all]"
+pip install "docstruct-ai[all]"
 ```
 
 ### Supported inputs and outputs
 
 | Inputs | Outputs | Optional cloud |
 |--------|---------|----------------|
-| PDF (digital + scanned), PNG/JPEG/WebP/TIFF | JSON, NDJSON, XML, **Markdown** | **S3** read/write (`docstruct[s3]`) |
+| PDF (digital + scanned), PNG/JPEG/WebP/TIFF | JSON, NDJSON, XML, **Markdown** | **S3** read/write (`docstruct-ai[s3]`) |
 | **DOCX**, **PPTX** (native text, stdlib) | Provenance + validation telemetry | |
 
 Native text path (no VLM): `client.extract_native("file.docx")` returns pages + markdown.
 
-Also installs the `docstruct` command (same as `python -m docstruct`).
+Also installs the `docstruct-ai` command (same as `python -m docstruct-ai`).
 
 ---
 
@@ -118,7 +123,7 @@ Also installs the `docstruct` command (same as `python -m docstruct`).
 ### Use Case 1: Local Open-Weight VLM (Ollama) - Privacy First
 
 ```python
-from docstruct import DocumentClient, OllamaProvider, RoutingPolicy
+from docstruct-ai import DocumentClient, OllamaProvider, RoutingPolicy
 from pydantic import BaseModel, Field
 
 class LineItem(BaseModel):
@@ -148,7 +153,7 @@ print(result.to_json(include_telemetry=True))
 ### Use Case 2: Local-First with Cloud Fallback
 
 ```python
-from docstruct import (
+from docstruct-ai import (
     DocumentClient, OllamaProvider, OpenAICompatProvider, RoutingPolicy
 )
 
@@ -175,7 +180,7 @@ result = client.extract("complex_form.pdf", schema=MySchema)
 ### Use Case 3: Custom Business Validation Rules
 
 ```python
-from docstruct.models.ir import DocumentIR
+from docstruct-ai.models.ir import DocumentIR
 from pydantic import BaseModel
 
 def check_line_items_sum_to_total(data: BaseModel, ir: DocumentIR) -> list[str]:
@@ -213,7 +218,7 @@ print(xml)
 ### Use Case 5: Streaming NDJSON for Lakehouse / RAG
 
 ```python
-from docstruct.serializers import to_ndjson
+from docstruct-ai.serializers import to_ndjson
 
 results = [client.extract(f) for f in pdf_files]
 ndjson_stream = to_ndjson(results, include_telemetry=False)
@@ -225,7 +230,7 @@ with open("invoices.ndjson", "w", encoding="utf-8") as f:
 ### Use Case 6: Generic HTTP OCR Service (Docling / MinerU / PaddleOCR-VL)
 
 ```python
-from docstruct import DocumentClient, HttpOCRProvider, RoutingPolicy
+from docstruct-ai import DocumentClient, HttpOCRProvider, RoutingPolicy
 
 client = DocumentClient(
     providers=[
@@ -242,13 +247,13 @@ client = DocumentClient(
 
 ```bash
 # JSON with telemetry
-docstruct extract invoice.pdf --schema schema.json --format json -o out.json
+docstruct-ai extract invoice.pdf --schema schema.json --format json -o out.json
 
 # XML
-docstruct extract invoice.pdf --format xml --root-tag Invoice -o out.xml
+docstruct-ai extract invoice.pdf --format xml --root-tag Invoice -o out.xml
 
 # Using Ollama
-docstruct extract scan.png --provider ollama --format json
+docstruct-ai extract scan.png --provider ollama --format json
 ```
 
 ---
@@ -256,7 +261,7 @@ docstruct extract scan.png --provider ollama --format json
 ## Architecture Overview
 
 ```
-docstruct/
+docstruct-ai/
 ├── client.py              # DocumentClient – public entry point
 ├── config.py              # RoutingPolicy
 ├── models/
@@ -308,7 +313,7 @@ All providers produce a vendor-neutral IR before schema validation:
 ## Error Handling & Validation
 
 ```python
-from docstruct import ValidationError, ProviderError
+from docstruct-ai import ValidationError, ProviderError
 
 try:
     result = client.extract("bad.pdf", schema=Invoice)
@@ -333,7 +338,7 @@ result.validation.rules_failed
 ## Testing
 
 ```bash
-pip install "docstruct[dev]"
+pip install "docstruct-ai[dev]"
 pytest tests/ -q
 ```
 
@@ -347,5 +352,5 @@ MIT License. See [LICENSE](LICENSE).
 
 ---
 
-**Documentation site:** [https://thekakodkar.github.io/docstruct/](https://thekakodkar.github.io/docstruct/)  
-**Repository:** [https://github.com/thekakodkar/docstruct](https://github.com/thekakodkar/docstruct)
+**Documentation site:** [https://thekakodkar.github.io/docstruct-ai/](https://thekakodkar.github.io/docstruct-ai/)  
+**Repository:** [https://github.com/thekakodkar/docstruct-ai](https://github.com/thekakodkar/docstruct-ai)
