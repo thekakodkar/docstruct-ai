@@ -298,9 +298,9 @@ All providers produce a vendor-neutral IR before schema validation:
 
 | Provider | Structured JSON | BBoxes | PDF Native | Max Pages / Call | Typical Use |
 |---|---|---|---|---|---|
-| **MockProvider** | ✅ | ✅ | — | 50 | Tests, demos |
-| **OllamaProvider** | ✅ | — | — | 4 | Local privacy |
-| **OpenAICompatProvider** | ✅ | — | — | 8 | GPT-4o, vLLM, Claude-compatible |
+| **MockProvider** | ✅ | ✅ |   | 50 | Tests, demos |
+| **OllamaProvider** | ✅ |   |   | 4 | Local privacy |
+| **OpenAICompatProvider** | ✅ |   |   | 8 | GPT-4o, vLLM, Claude-compatible |
 | **HttpOCRProvider** | ✅ | ✅ | Configurable | Configurable | Docling, MinerU, PaddleOCR-VL |
 
 ---
