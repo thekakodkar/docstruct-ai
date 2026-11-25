@@ -1,5 +1,7 @@
 # docstruct v0.2.0 
 **Model-Agnostic OCR & Structured XML/JSON Library**
+<img width="769" height="336" alt="image" src="https://github.com/user-attachments/assets/5851aa9b-7041-4cd7-b823-61e7a11085a1" />
+
 
 Python 3.11+ · Open-Weight SLMs & Cloud VLMs · Deterministic Pydantic/XSD Schema Enforcement
 
