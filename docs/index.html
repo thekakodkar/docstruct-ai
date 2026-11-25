@@ -1,0 +1,1539 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>docstruct v0.1.0 | Enterprise Documentation & Use Case Guide</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+
+        :root {
+            --bg-body: #f4f7fb;
+            --bg-surface: #ffffff;
+            --bg-sidebar: #0b1120;
+            --bg-code: #0f172a;
+            --text-main: #0f172a;
+            --text-secondary: #334155;
+            --text-muted: #64748b;
+            --text-sidebar: #cbd5e1;
+            --accent: #2563eb;
+            --accent-dark: #1d4ed8;
+            --accent-soft: #eff6ff;
+            --accent-border: #bfdbfe;
+            --border: #e2e8f0;
+            --success: #059669;
+            --warning: #d97706;
+            --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.04);
+            --shadow-md: 0 4px 16px -2px rgba(15, 23, 42, 0.06), 0 2px 6px -1px rgba(15, 23, 42, 0.04);
+            --sidebar-width: 290px;
+            --sidebar-collapsed: 76px;
+            --mobile-header-height: 60px;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        html {
+            scroll-behavior: smooth;
+            overflow-x: hidden;
+        }
+
+        body {
+            font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background-color: var(--bg-body);
+            color: var(--text-main);
+            line-height: 1.65;
+            display: flex;
+            min-height: 100vh;
+            overflow-x: hidden;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* Mobile Top Bar (Hidden on Desktop) */
+        .mobile-topbar {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: var(--mobile-header-height);
+            background: #0b1120;
+            color: #ffffff;
+            padding: 0 1.15rem;
+            align-items: center;
+            justify-content: space-between;
+            z-index: 90;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.15);
+        }
+
+        .mobile-brand {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .mobile-menu-btn {
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            color: #ffffff;
+            width: 38px;
+            height: 38px;
+            border-radius: 8px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+        }
+
+        .mobile-menu-btn svg {
+            width: 20px;
+            height: 20px;
+            stroke: currentColor;
+            fill: none;
+            stroke-width: 2;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+        }
+
+        /* Mobile Backdrop Overlay */
+        .sidebar-backdrop {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(15, 23, 42, 0.55);
+            backdrop-filter: blur(2px);
+            z-index: 95;
+            opacity: 0;
+            transition: opacity 0.25s ease;
+        }
+
+        .sidebar-backdrop.active {
+            display: block;
+            opacity: 1;
+        }
+
+        /* Sidebar Navigation */
+        aside {
+            width: var(--sidebar-width);
+            background: linear-gradient(180deg, #0b1120 0%, #0f172a 100%);
+            color: var(--text-sidebar);
+            padding: 1.5rem 1rem;
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 100vh;
+            height: 100dvh;
+            overflow-y: auto;
+            overflow-x: hidden;
+            border-right: 1px solid rgba(255, 255, 255, 0.08);
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            transition: width 0.25s cubic-bezier(0.4, 0, 0.2, 1), transform 0.28s cubic-bezier(0.4, 0, 0.2, 1);
+            z-index: 100;
+        }
+
+        body.sidebar-collapsed aside {
+            width: var(--sidebar-collapsed);
+            padding: 1.5rem 0.65rem;
+        }
+
+        .brand-box {
+            margin-bottom: 1.5rem;
+            padding-bottom: 1.15rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .brand-top {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 0.5rem;
+            min-height: 36px;
+        }
+
+        body.sidebar-collapsed .brand-top {
+            justify-content: center;
+        }
+
+        .brand-title-wrap {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            overflow: hidden;
+            white-space: nowrap;
+        }
+
+        body.sidebar-collapsed .brand-title-wrap,
+        body.sidebar-collapsed .brand-sub,
+        body.sidebar-collapsed .nav-title,
+        body.sidebar-collapsed .nav-label,
+        body.sidebar-collapsed .ext-label {
+            display: none;
+        }
+
+        .brand {
+            font-size: 1.35rem;
+            font-weight: 800;
+            color: #ffffff;
+            letter-spacing: -0.03em;
+        }
+
+        .badge-version {
+            background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+            color: #fff;
+            font-size: 0.7rem;
+            padding: 0.16rem 0.5rem;
+            border-radius: 999px;
+            font-weight: 600;
+            box-shadow: 0 2px 6px rgba(37, 99, 235, 0.4);
+        }
+
+        .brand-sub {
+            font-size: 0.8rem;
+            color: #94a3b8;
+            line-height: 1.4;
+            margin-top: 0.35rem;
+        }
+
+        .toggle-btn {
+            background: rgba(255, 255, 255, 0.07);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            color: #e2e8f0;
+            width: 34px;
+            height: 34px;
+            border-radius: 8px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            flex-shrink: 0;
+            transition: all 0.15s ease;
+        }
+
+        .toggle-btn:hover {
+            background: var(--accent);
+            border-color: var(--accent);
+            color: #ffffff;
+        }
+
+        .toggle-btn svg {
+            width: 18px;
+            height: 18px;
+            stroke: currentColor;
+            fill: none;
+            stroke-width: 2;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+            transition: transform 0.25s ease;
+        }
+
+        body.sidebar-collapsed .toggle-btn svg {
+            transform: rotate(180deg);
+        }
+
+        .mobile-close-btn {
+            display: none;
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            color: #e2e8f0;
+            width: 34px;
+            height: 34px;
+            border-radius: 8px;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+        }
+
+        .mobile-close-btn svg {
+            width: 18px;
+            height: 18px;
+            stroke: currentColor;
+            fill: none;
+            stroke-width: 2;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+        }
+
+        .nav-group {
+            margin-bottom: 1.25rem;
+        }
+
+        .nav-title {
+            font-size: 0.68rem;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: #64748b;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            padding-left: 0.75rem;
+        }
+
+        aside ul {
+            list-style: none;
+        }
+
+        aside li {
+            margin-bottom: 0.25rem;
+        }
+
+        aside a.nav-link {
+            color: var(--text-sidebar);
+            text-decoration: none;
+            font-size: 0.87rem;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.55rem 0.75rem;
+            border-radius: 8px;
+            transition: all 0.15s ease;
+            white-space: nowrap;
+        }
+
+        body.sidebar-collapsed aside a.nav-link {
+            justify-content: center;
+            padding: 0.6rem 0;
+        }
+
+        aside a.nav-link:hover {
+            background-color: rgba(59, 130, 246, 0.18);
+            color: #ffffff;
+        }
+
+        .nav-icon {
+            width: 18px;
+            height: 18px;
+            stroke: currentColor;
+            fill: none;
+            stroke-width: 2;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+            flex-shrink: 0;
+        }
+
+        .sidebar-links {
+            padding-top: 1.1rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.08);
+            display: flex;
+            flex-direction: column;
+            gap: 0.45rem;
+        }
+
+        .ext-link {
+            display: flex;
+            align-items: center;
+            gap: 0.7rem;
+            color: #e2e8f0;
+            text-decoration: none;
+            font-size: 0.84rem;
+            font-weight: 500;
+            padding: 0.55rem 0.75rem;
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.07);
+            transition: all 0.15s ease;
+            white-space: nowrap;
+        }
+
+        body.sidebar-collapsed .ext-link {
+            justify-content: center;
+            padding: 0.55rem 0;
+        }
+
+        .ext-link:hover {
+            background: rgba(37, 99, 235, 0.22);
+            border-color: rgba(59, 130, 246, 0.45);
+            color: #ffffff;
+        }
+
+        .ext-link svg {
+            width: 17px;
+            height: 17px;
+            fill: currentColor;
+            flex-shrink: 0;
+        }
+
+        /* Main Content */
+        main {
+            margin-left: var(--sidebar-width);
+            padding: 3rem 4rem;
+            max-width: calc(100% - var(--sidebar-width));
+            width: 100%;
+            min-width: 0;
+            transition: margin-left 0.25s cubic-bezier(0.4, 0, 0.2, 1), max-width 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        body.sidebar-collapsed main {
+            margin-left: var(--sidebar-collapsed);
+            max-width: calc(100% - var(--sidebar-collapsed));
+        }
+
+        .content-container {
+            max-width: 1060px;
+            margin: 0 auto;
+            width: 100%;
+            min-width: 0;
+        }
+
+        header.hero {
+            background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 2.5rem;
+            margin-bottom: 2.75rem;
+            box-shadow: var(--shadow-md);
+            position: relative;
+            overflow: hidden;
+        }
+
+        header.hero::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, #2563eb, #0ea5e9, #10b981);
+        }
+
+        header.hero h1 {
+            font-size: 2.1rem;
+            font-weight: 800;
+            color: #0f172a;
+            margin-bottom: 0.75rem;
+            letter-spacing: -0.03em;
+            line-height: 1.2;
+        }
+
+        header.hero p {
+            color: var(--text-secondary);
+            font-size: 1.05rem;
+            max-width: 760px;
+        }
+
+        .hero-actions {
+            display: flex;
+            gap: 0.65rem;
+            flex-wrap: wrap;
+            margin-top: 1.5rem;
+        }
+
+        .hero-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            padding: 0.6rem 1.05rem;
+            border-radius: 8px;
+            font-size: 0.86rem;
+            font-weight: 600;
+            text-decoration: none;
+            transition: all 0.15s ease;
+            border: 1px solid var(--border);
+            background: #ffffff;
+            color: #0f172a;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .hero-btn:hover {
+            border-color: var(--accent);
+            color: var(--accent);
+            transform: translateY(-1px);
+            box-shadow: var(--shadow-md);
+        }
+
+        .hero-btn.primary {
+            background: var(--accent);
+            color: #ffffff;
+            border-color: var(--accent);
+        }
+
+        .hero-btn.primary:hover {
+            background: var(--accent-dark);
+            color: #ffffff;
+        }
+
+        .hero-btn svg {
+            width: 16px;
+            height: 16px;
+            fill: currentColor;
+            flex-shrink: 0;
+        }
+
+        .pill-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1.35rem;
+        }
+
+        .pill {
+            background: var(--accent-soft);
+            color: var(--accent);
+            font-size: 0.76rem;
+            font-weight: 600;
+            padding: 0.28rem 0.72rem;
+            border-radius: 999px;
+            border: 1px solid var(--accent-border);
+        }
+
+        section {
+            margin-bottom: 3.25rem;
+            scroll-margin-top: 2rem;
+            min-width: 0;
+        }
+
+        h2 {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #0f172a;
+            margin-bottom: 0.85rem;
+            padding-bottom: 0.55rem;
+            border-bottom: 2px solid var(--border);
+            letter-spacing: -0.02em;
+        }
+
+        h3 {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #0f172a;
+            margin: 1.4rem 0 0.6rem;
+        }
+
+        p {
+            margin-bottom: 1rem;
+            color: var(--text-secondary);
+        }
+
+        /* Responsive Table Wrapper */
+        .table-wrapper {
+            width: 100%;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            background: var(--bg-surface);
+            margin: 1.25rem 0;
+            box-shadow: var(--shadow-sm);
+        }
+
+        table {
+            width: 100%;
+            min-width: 620px;
+            border-collapse: collapse;
+            font-size: 0.91rem;
+        }
+
+        th, td {
+            text-align: left;
+            padding: 0.9rem 1.1rem;
+            border-bottom: 1px solid var(--border);
+            vertical-align: top;
+        }
+
+        th {
+            background-color: #f8fafc;
+            font-weight: 700;
+            color: #0f172a;
+            font-size: 0.82rem;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            white-space: nowrap;
+        }
+
+        tr:hover td {
+            background-color: #fafcff;
+        }
+
+        tr:last-child td {
+            border-bottom: none;
+        }
+
+        code.inline {
+            background: #f1f5f9;
+            color: #0f172a;
+            padding: 0.15rem 0.4rem;
+            border-radius: 5px;
+            font-family: "JetBrains Mono", "SFMono-Regular", Consolas, monospace;
+            font-size: 0.83em;
+            border: 1px solid #e2e8f0;
+            word-break: break-word;
+        }
+
+        /* Code Cards */
+        .use-case-card {
+            background: var(--bg-surface);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 1.85rem;
+            margin-bottom: 1.75rem;
+            box-shadow: var(--shadow-sm);
+            transition: box-shadow 0.2s ease, border-color 0.2s ease;
+            min-width: 0;
+        }
+
+        .use-case-card:hover {
+            box-shadow: var(--shadow-md);
+            border-color: #cbd5e1;
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 0.75rem;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+
+        .card-title {
+            font-size: 1.15rem;
+            font-weight: 700;
+            color: #0f172a;
+            letter-spacing: -0.01em;
+            line-height: 1.35;
+        }
+
+        .tag {
+            font-size: 0.74rem;
+            font-weight: 600;
+            padding: 0.24rem 0.7rem;
+            border-radius: 999px;
+            background: #e0e7ff;
+            color: #3730a3;
+            white-space: nowrap;
+        }
+
+        .tag.green { background: #d1fae5; color: #065f46; }
+        .tag.amber { background: #fef3c7; color: #92400e; }
+        .tag.slate { background: #f1f5f9; color: #334155; }
+
+        .code-wrapper {
+            position: relative;
+            margin-top: 0.9rem;
+            max-width: 100%;
+        }
+
+        pre {
+            background-color: var(--bg-code);
+            color: #f8fafc;
+            padding: 2.35rem 1.25rem 1.25rem;
+            border-radius: 10px;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+            font-family: "JetBrains Mono", "SFMono-Regular", Consolas, monospace;
+            font-size: 0.84rem;
+            line-height: 1.6;
+            border: 1px solid #1e293b;
+        }
+
+        .copy-btn {
+            position: absolute;
+            top: 0.55rem;
+            right: 0.55rem;
+            background: rgba(255, 255, 255, 0.12);
+            color: #e2e8f0;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 6px;
+            padding: 0.28rem 0.7rem;
+            font-size: 0.74rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            z-index: 2;
+        }
+
+        .copy-btn:hover {
+            background: var(--accent);
+            border-color: var(--accent);
+            color: #ffffff;
+        }
+
+        /* Interactive Playground */
+        .playground {
+            background: var(--bg-surface);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 1.85rem;
+            box-shadow: var(--shadow-md);
+        }
+
+        .pg-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.25rem;
+            margin-top: 1rem;
+        }
+
+        .pg-col {
+            min-width: 0;
+        }
+
+        textarea {
+            width: 100%;
+            height: 220px;
+            font-family: "JetBrains Mono", "SFMono-Regular", Consolas, monospace;
+            font-size: 0.82rem;
+            padding: 0.9rem;
+            border: 1px solid #cbd5e1;
+            border-radius: 10px;
+            background: #f8fafc;
+            color: #0f172a;
+            resize: vertical;
+            margin-top: 0.4rem;
+        }
+
+        textarea:focus {
+            outline: none;
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+        }
+
+        .btn-row {
+            display: flex;
+            gap: 0.65rem;
+            margin-top: 1rem;
+            flex-wrap: wrap;
+        }
+
+        button.action {
+            background: var(--accent);
+            color: #fff;
+            border: none;
+            padding: 0.65rem 1.15rem;
+            border-radius: 8px;
+            font-size: 0.86rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.15s ease;
+        }
+
+        button.action:hover {
+            background: var(--accent-dark);
+        }
+
+        button.action.secondary {
+            background: #1e293b;
+        }
+
+        button.action.secondary:hover {
+            background: #0f172a;
+        }
+
+        footer {
+            margin-top: 3.5rem;
+            padding-top: 1.75rem;
+            border-top: 1px solid var(--border);
+            color: var(--text-muted);
+            font-size: 0.88rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .footer-links {
+            display: flex;
+            gap: 1.25rem;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .footer-links a {
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-weight: 600;
+            transition: color 0.15s ease;
+        }
+
+        .footer-links a:hover {
+            color: var(--accent);
+        }
+
+        /* =========================================
+           TABLET & MOBILE RESPONSIVE BREAKPOINTS
+           ========================================= */
+        @media (max-width: 960px) {
+            .mobile-topbar {
+                display: flex;
+            }
+
+            /* Convert sidebar into full slide-over drawer */
+            aside {
+                width: 280px !important;
+                padding: 1.35rem 1rem !important;
+                transform: translateX(-100%);
+                box-shadow: 4px 0 24px rgba(0, 0, 0, 0.35);
+            }
+
+            body.mobile-nav-open aside {
+                transform: translateX(0);
+            }
+
+            /* Restore full labels inside mobile drawer even if desktop was collapsed */
+            body.sidebar-collapsed .brand-title-wrap,
+            body.sidebar-collapsed .brand-sub,
+            body.sidebar-collapsed .nav-title,
+            body.sidebar-collapsed .nav-label,
+            body.sidebar-collapsed .ext-label {
+                display: flex !important;
+            }
+            body.sidebar-collapsed .brand-sub,
+            body.sidebar-collapsed .nav-title {
+                display: block !important;
+            }
+            body.sidebar-collapsed .brand-top {
+                justify-content: space-between !important;
+            }
+            body.sidebar-collapsed aside a.nav-link,
+            body.sidebar-collapsed .ext-link {
+                justify-content: flex-start !important;
+                padding: 0.6rem 0.75rem !important;
+            }
+
+            .toggle-btn {
+                display: none;
+            }
+
+            .mobile-close-btn {
+                display: inline-flex;
+            }
+
+            main,
+            body.sidebar-collapsed main {
+                margin-left: 0;
+                max-width: 100%;
+                padding: calc(var(--mobile-header-height) + 1.5rem) 1.25rem 2.5rem;
+            }
+
+            section {
+                scroll-margin-top: calc(var(--mobile-header-height) + 1rem);
+                margin-bottom: 2.5rem;
+            }
+
+            .pg-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 640px) {
+            header.hero {
+                padding: 1.5rem 1.25rem;
+                border-radius: 14px;
+                margin-bottom: 2rem;
+            }
+
+            header.hero h1 {
+                font-size: 1.55rem;
+            }
+
+            header.hero p {
+                font-size: 0.96rem;
+            }
+
+            .hero-actions {
+                flex-direction: column;
+            }
+
+            .hero-btn {
+                width: 100%;
+            }
+
+            h2 {
+                font-size: 1.3rem;
+            }
+
+            .use-case-card,
+            .playground {
+                padding: 1.25rem 1.1rem;
+                border-radius: 12px;
+            }
+
+            .card-title {
+                font-size: 1.05rem;
+            }
+
+            pre {
+                font-size: 0.79rem;
+                padding: 2.3rem 0.95rem 1rem;
+            }
+
+            /* 16px prevents iOS Safari from auto-zooming on focus */
+            textarea {
+                font-size: 16px;
+                height: 190px;
+            }
+
+            .btn-row {
+                flex-direction: column;
+            }
+
+            button.action {
+                width: 100%;
+                text-align: center;
+            }
+
+            footer {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+        }
+    
+    </style>
+</head>
+<body>
+
+<!-- Mobile Header -->
+<div class="mobile-topbar">
+    <div class="mobile-brand">
+        <span class="brand" style="font-size: 1.2rem;">docstruct</span>
+        <span class="badge-version">v0.1.0</span>
+    </div>
+    <button class="mobile-menu-btn" id="mobileMenuBtn" aria-label="Open Navigation Menu">
+        <svg viewBox="0 0 24 24">
+            <line x1="3" y1="6" x2="21" y2="6"></line>
+            <line x1="3" y1="12" x2="21" y2="12"></line>
+            <line x1="3" y1="18" x2="21" y2="18"></line>
+        </svg>
+    </button>
+</div>
+
+<!-- Backdrop Overlay for Mobile Drawer -->
+<div class="sidebar-backdrop" id="sidebarBackdrop"></div>
+
+<aside id="sidebar">
+    <div>
+        <div class="brand-box">
+            <div class="brand-top">
+                <div class="brand-title-wrap">
+                    <span class="brand">docstruct</span>
+                    <span class="badge-version">v0.1.0</span>
+                </div>
+                <button class="toggle-btn" id="sidebarToggle" title="Toggle Sidebar" aria-label="Toggle Sidebar">
+                    <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"></polyline></svg>
+                </button>
+                <button class="mobile-close-btn" id="mobileCloseBtn" title="Close Menu" aria-label="Close Navigation Menu">
+                    <svg viewBox="0 0 24 24">
+                        <line x1="18" y1="6" x2="6" y2="18"></line>
+                        <line x1="6" y1="6" x2="18" y2="18"></line>
+                    </svg>
+                </button>
+            </div>
+            <div class="brand-sub">Model-Agnostic OCR &amp; Structured Extraction</div>
+        </div>
+
+        <div class="nav-group">
+            <div class="nav-title">Getting Started</div>
+            <ul>
+                <li>
+                    <a class="nav-link" href="#overview" title="Overview">
+                        <svg class="nav-icon" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
+                        <span class="nav-label">Overview</span>
+                    </a>
+                </li>
+                <li>
+                    <a class="nav-link" href="#quickstart" title="Quick Start">
+                        <svg class="nav-icon" viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>
+                        <span class="nav-label">Quick Start</span>
+                    </a>
+                </li>
+                <li>
+                    <a class="nav-link" href="#which-method" title="Which Method">
+                        <svg class="nav-icon" viewBox="0 0 24 24"><line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line><line x1="3" y1="6" x2="3.01" y2="6"></line><line x1="3" y1="12" x2="3.01" y2="12"></line><line x1="3" y1="18" x2="3.01" y2="18"></line></svg>
+                        <span class="nav-label">Which Method?</span>
+                    </a>
+                </li>
+                <li>
+                    <a class="nav-link" href="#installation" title="Installation">
+                        <svg class="nav-icon" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                        <span class="nav-label">Installation</span>
+                    </a>
+                </li>
+            </ul>
+        </div>
+
+        <div class="nav-group">
+            <div class="nav-title">Guide</div>
+            <ul>
+                <li>
+                    <a class="nav-link" href="#principles" title="Design Principles">
+                        <svg class="nav-icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+                        <span class="nav-label">Design Principles</span>
+                    </a>
+                </li>
+                <li>
+                    <a class="nav-link" href="#usecases" title="Use Cases">
+                        <svg class="nav-icon" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>
+                        <span class="nav-label">Use Cases</span>
+                    </a>
+                </li>
+                <li>
+                    <a class="nav-link" href="#architecture" title="Architecture">
+                        <svg class="nav-icon" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="3" y1="9" x2="21" y2="9"></line><line x1="9" y1="21" x2="9" y2="9"></line></svg>
+                        <span class="nav-label">Architecture</span>
+                    </a>
+                </li>
+                <li>
+                    <a class="nav-link" href="#providers" title="Provider Matrix">
+                        <svg class="nav-icon" viewBox="0 0 24 24"><ellipse cx="12" cy="5" rx="9" ry="3"></ellipse><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"></path><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"></path></svg>
+                        <span class="nav-label">Provider Matrix</span>
+                    </a>
+                </li>
+                <li>
+                    <a class="nav-link" href="#validation" title="Validation">
+                        <svg class="nav-icon" viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+                        <span class="nav-label">Validation &amp; Errors</span>
+                    </a>
+                </li>
+                <li>
+                    <a class="nav-link" href="#cli" title="CLI">
+                        <svg class="nav-icon" viewBox="0 0 24 24"><polyline points="4 17 10 11 4 5"></polyline><line x1="12" y1="19" x2="20" y2="19"></line></svg>
+                        <span class="nav-label">CLI</span>
+                    </a>
+                </li>
+                <li>
+                    <a class="nav-link" href="#playground" title="Playground">
+                        <svg class="nav-icon" viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+                        <span class="nav-label">Playground</span>
+                    </a>
+                </li>
+            </ul>
+        </div>
+
+        <div class="nav-group">
+            <div class="nav-title">Legal</div>
+            <ul>
+                <li>
+                    <a class="nav-link" href="#license" title="License">
+                        <svg class="nav-icon" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line></svg>
+                        <span class="nav-label">License</span>
+                    </a>
+                </li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="sidebar-links">
+        <a class="ext-link" href="https://github.com/thekakodkar/docstruct" target="_blank" rel="noopener noreferrer">
+            <svg viewBox="0 0 24 24"><path d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12"></path></svg>
+            <span class="ext-label">GitHub</span>
+        </a>
+        <a class="ext-link" href="https://pypi.org/project/docstruct/" target="_blank" rel="noopener noreferrer">
+            <svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zm0 7.3L5.4 6 12 2.7 18.6 6 12 9.3zm-10 3.4l10 5 10-5v2.3l-10 5-10-5v-2.3zm0 5l10 5 10-5V20l-10 5-10-5v-2.3z"/></svg>
+            <span class="ext-label">PyPI</span>
+        </a>
+    </div>
+</aside>
+
+<main>
+    <div class="content-container">
+        <header class="hero" id="overview">
+            <h1>docstruct: Model-Agnostic OCR &amp; Structured Extraction</h1>
+            <p>
+                Extract structured data from PDFs, scanned pages, and images into
+                <strong>validated JSON, streaming NDJSON, or compliant XML</strong>
+                behind a single unified interface. Swap open-weight VLMs and cloud
+                vision APIs without changing application code.
+            </p>
+
+            <div class="hero-actions">
+                <a class="hero-btn primary" href="https://pypi.org/project/docstruct/" target="_blank" rel="noopener noreferrer">
+                    <svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zm0 7.3L5.4 6 12 2.7 18.6 6 12 9.3zm-10 3.4l10 5 10-5v2.3l-10 5-10-5v-2.3zm0 5l10 5 10-5V20l-10 5-10-5v-2.3z"/></svg>
+                    Install from PyPI
+                </a>
+                <a class="hero-btn" href="https://github.com/thekakodkar/docstruct" target="_blank" rel="noopener noreferrer">
+                    <svg viewBox="0 0 24 24"><path d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12"></path></svg>
+                    View Source on GitHub
+                </a>
+                <a class="hero-btn" href="https://www.linkedin.com/in/thekakodkar/" target="_blank" rel="noopener noreferrer">
+                    <svg viewBox="0 0 24 24"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>
+                    Author: Niraj Kakodkar
+                </a>
+            </div>
+
+            <div class="pill-row">
+                <span class="pill">Schema-First</span>
+                <span class="pill">Provider Agnostic</span>
+                <span class="pill">Local-First Routing</span>
+                <span class="pill">Full Provenance</span>
+                <span class="pill">XML + JSON Native</span>
+                <span class="pill">Python 3.11+</span>
+            </div>
+        </header>
+
+        <h2 id="quickstart">Extract an Invoice in 4 Lines</h2>
+        <p>Turn any PDF or image into validated, typed data with a single call. Swap providers without changing application code.</p>
+
+        <div class="use-case-card">
+            <div class="card-header">
+                <span class="card-title">Python</span>
+            </div>
+            <div class="code-wrapper">
+                <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+                <pre><code>from docstruct import DocumentClient, MockProvider, RoutingPolicy
+from pydantic import BaseModel
+
+class Invoice(BaseModel):
+    vendor: str
+    invoice_number: str
+    total: float
+    currency: str
+
+client = DocumentClient(
+    providers=[MockProvider()],
+    default_routing=RoutingPolicy(primary_provider="mock"),
+)
+result = client.extract("invoice.pdf", schema=Invoice)
+print(result.to_json())
+print(result.to_xml(root_tag="Invoice", list_item_tags={"lines": "Line"}))</code></pre>
+            </div>
+        </div>
+
+        <div class="pg-grid">
+            <div class="pg-col">
+                <p><strong>JSON Output</strong></p>
+                <div class="code-wrapper">
+                    <pre><code>{
+  "currency": "USD",
+  "invoice_number": "INV-1001",
+  "total": 1250.0,
+  "vendor": "ACME Corp"
+}</code></pre>
+                </div>
+            </div>
+            <div class="pg-col">
+                <p><strong>XML Output</strong></p>
+                <div class="code-wrapper">
+                    <pre><code>&lt;Invoice&gt;
+  &lt;vendor&gt;ACME Corp&lt;/vendor&gt;
+  &lt;invoice_number&gt;INV-1001&lt;/invoice_number&gt;
+  &lt;total&gt;1250.0&lt;/total&gt;
+  &lt;currency&gt;USD&lt;/currency&gt;
+&lt;/Invoice&gt;</code></pre>
+                </div>
+            </div>
+        </div>
+
+        <h2 id="which-method">Which Method Should I Use?</h2>
+        <p>Pick the entry point that matches your destination system. All paths share the same validation, routing, and telemetry layer.</p>
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Your Use Case</th>
+                        <th>Function / Method</th>
+                        <th>Return Type</th>
+                        <th>Best For</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>One-shot extraction with schema</strong></td>
+                        <td><code class="inline">client.extract(path, schema=Model)</code></td>
+                        <td><code class="inline">ExtractionResult</code></td>
+                        <td>Most applications - start here</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Async high-throughput</strong></td>
+                        <td><code class="inline">await client.aextract(...)</code></td>
+                        <td><code class="inline">ExtractionResult</code></td>
+                        <td>FastAPI, batch workers</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Validated Python objects</strong></td>
+                        <td><code class="inline">result.data</code></td>
+                        <td><code class="inline">BaseModel</code> / <code class="inline">dict</code></td>
+                        <td>Business logic, DB inserts</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Clean JSON string</strong></td>
+                        <td><code class="inline">result.to_json()</code></td>
+                        <td><code class="inline">str</code></td>
+                        <td>APIs, document stores</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Streaming NDJSON</strong></td>
+                        <td><code class="inline">to_ndjson([result, ...])</code></td>
+                        <td><code class="inline">str</code></td>
+                        <td>Snowflake, Databricks, Kafka, RAG</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Compliant XML</strong></td>
+                        <td><code class="inline">result.to_xml(...)</code></td>
+                        <td><code class="inline">str</code></td>
+                        <td>ERP, EDI, XSD integrations</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Full audit trail</strong></td>
+                        <td><code class="inline">result.telemetry</code> / <code class="inline">result.validation</code></td>
+                        <td>models</td>
+                        <td>Governance, cost tracking</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <h2 id="installation">Installation</h2>
+        <div class="use-case-card">
+            <div class="code-wrapper">
+                <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+                <pre><code># Core library (Pydantic + httpx + Pillow)
+pip install docstruct
+
+# With PDF rendering (PyMuPDF)
+pip install "docstruct[pdf]"
+
+# With XSD validation (lxml)
+pip install "docstruct[xml]"
+
+# CLI
+pip install "docstruct[cli]"
+
+# Playground (Streamlit)
+pip install "docstruct[pdf]" streamlit
+
+# Everything
+pip install "docstruct[all]"</code></pre>
+            </div>
+        </div>
+        <p>Also installs the <code class="inline">docstruct</code> command (same as <code class="inline">python -m docstruct</code>).</p>
+
+        <h2 id="principles">Core Design Principles</h2>
+        <div class="use-case-card">
+            <ol style="padding-left: 1.25rem; color: var(--text-secondary);">
+                <li style="margin-bottom: 0.75rem;"><strong>Model &amp; Runtime Agnostic</strong> - Ollama, OpenAI-compatible servers, PaddleOCR-VL, Docling, MinerU and cloud VLMs all implement one uniform contract.</li>
+                <li style="margin-bottom: 0.75rem;"><strong>Schema-First &amp; Deterministic</strong> - Never trust raw LLM text. Enforce contracts with Pydantic v2 / JSON Schema and custom business rules. Targeted repair + automatic escalation on failure.</li>
+                <li style="margin-bottom: 0.75rem;"><strong>First-Class XML &amp; JSON</strong> - Deterministic JSON, streaming NDJSON, and configurable XML (namespaces, attributes vs elements, CDATA, optional XSD).</li>
+                <li style="margin-bottom: 0.75rem;"><strong>Provenance &amp; Telemetry</strong> - Page numbers, bounding boxes, confidence, latency, estimated cost and full validation reports on every result.</li>
+                <li style="margin-bottom: 0.75rem;"><strong>Clean Core</strong> - Minimal dependencies. Vendor quirks stay inside provider adapters.</li>
+            </ol>
+        </div>
+
+        <h2 id="usecases">Every Use Case: Copy-Paste Ready</h2>
+
+        <div class="use-case-card" id="uc-ollama">
+            <div class="card-header">
+                <span class="card-title">Use Case 1 - Local Open-Weight VLM (Ollama)</span>
+                <span class="tag green">Privacy First</span>
+            </div>
+            <p>Privacy-first extraction that never leaves your machine.</p>
+            <div class="code-wrapper">
+                <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+                <pre><code>from docstruct import DocumentClient, OllamaProvider, RoutingPolicy
+from pydantic import BaseModel
+
+class LineItem(BaseModel):
+    description: str
+    qty: float
+    unit_price: float
+    amount: float
+
+class Invoice(BaseModel):
+    vendor: str
+    invoice_number: str
+    total: float
+    currency: str = "USD"
+    lines: list[LineItem] = []
+
+client = DocumentClient(
+    providers=[OllamaProvider(model="qwen2.5vl:7b")],
+    default_routing=RoutingPolicy(primary_provider="ollama"),
+)
+result = client.extract("scanned_invoice.pdf", schema=Invoice)
+print(result.to_json(include_telemetry=True))</code></pre>
+            </div>
+        </div>
+
+        <div class="use-case-card" id="uc-fallback">
+            <div class="card-header">
+                <span class="card-title">Use Case 2 - Local-First with Cloud Fallback</span>
+                <span class="tag amber">Resilient</span>
+            </div>
+            <p>Try the local model first; automatically escalate to a cloud VLM when validation fails or confidence is low.</p>
+            <div class="code-wrapper">
+                <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+                <pre><code>from docstruct import (
+    DocumentClient, OllamaProvider, OpenAICompatProvider, RoutingPolicy
+)
+
+client = DocumentClient(
+    providers=[
+        OllamaProvider(model="qwen2.5vl:7b"),
+        OpenAICompatProvider(
+            model="gpt-4o",
+            base_url="https://api.openai.com/v1",
+            api_key="sk-...",
+        ),
+    ],
+    default_routing=RoutingPolicy(
+        primary_provider="ollama",
+        fallback_providers=["openai_compat"],
+        max_retries_per_provider=1,
+        escalate_on_low_confidence=0.7,
+    ),
+)
+result = client.extract("complex_form.pdf", schema=MySchema)</code></pre>
+            </div>
+        </div>
+
+        <div class="use-case-card" id="uc-rules">
+            <div class="card-header">
+                <span class="card-title">Use Case 3 - Custom Business Validation Rules</span>
+            </div>
+            <div class="code-wrapper">
+                <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+                <pre><code>from docstruct.models.ir import DocumentIR
+from pydantic import BaseModel
+
+def check_line_items_sum_to_total(data: BaseModel, ir: DocumentIR) -&gt; list[str]:
+    if not hasattr(data, "lines") or not hasattr(data, "total"):
+        return []
+    calculated = sum(line.amount for line in data.lines)
+    if abs(calculated - data.total) &gt; 0.01:
+        return [f"Line items sum ({calculated}) does not equal total ({data.total})"]
+    return []
+
+result = client.extract(
+    "invoice.pdf",
+    schema=Invoice,
+    rules=[check_line_items_sum_to_total],
+)
+if not result.validation.is_valid:
+    print(result.validation.errors)</code></pre>
+            </div>
+        </div>
+
+        <div class="use-case-card" id="uc-xml">
+            <div class="card-header">
+                <span class="card-title">Use Case 4 - XML with Namespaces &amp; Attributes</span>
+            </div>
+            <div class="code-wrapper">
+                <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+                <pre><code>xml = result.to_xml(
+    root_tag="Invoice",
+    list_item_tags={"lines": "Line"},
+    attribute_fields={"currency", "invoice_number"},
+    namespaces={"inv": "http://example.com/invoice/v1"},
+    pretty=True,
+)
+print(xml)</code></pre>
+            </div>
+        </div>
+
+        <div class="use-case-card" id="uc-ndjson">
+            <div class="card-header">
+                <span class="card-title">Use Case 5 - Streaming NDJSON for Lakehouse / RAG</span>
+            </div>
+            <div class="code-wrapper">
+                <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+                <pre><code>from docstruct.serializers import to_ndjson
+
+results = [client.extract(f) for f in pdf_files]
+ndjson_stream = to_ndjson(results)
+
+with open("invoices.ndjson", "w", encoding="utf-8") as f:
+    f.write(ndjson_stream)</code></pre>
+            </div>
+        </div>
+
+        <div class="use-case-card" id="uc-http">
+            <div class="card-header">
+                <span class="card-title">Use Case 6 - Generic HTTP OCR (Docling / MinerU / PaddleOCR-VL)</span>
+            </div>
+            <div class="code-wrapper">
+                <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+                <pre><code>from docstruct import DocumentClient, HttpOCRProvider, RoutingPolicy
+
+client = DocumentClient(
+    providers=[
+        HttpOCRProvider(
+            endpoint="http://localhost:8000/extract",
+            name="docling",
+        ),
+    ],
+    default_routing=RoutingPolicy(primary_provider="docling"),
+)</code></pre>
+            </div>
+        </div>
+
+        <h2 id="architecture">Architecture Overview</h2>
+        <div class="use-case-card">
+            <div class="code-wrapper">
+                <pre><code>docstruct/
+├── client.py              # DocumentClient - public entry point
+├── config.py              # RoutingPolicy
+├── models/
+│   ├── ir.py              # DocumentIR, PageIR, Block, BBox
+│   ├── result.py          # ExtractionResult, Telemetry, ValidationReport
+│   └── schema.py          # Pydantic / JSON Schema normalization
+├── providers/
+│   ├── base.py            # BaseOCRProvider + ProviderCapabilities
+│   ├── mock.py            # Deterministic test double
+│   ├── ollama.py          # Local Ollama VLM
+│   ├── openai_compat.py   # vLLM, LM Studio, OpenAI, Azure
+│   └── http_ocr.py        # Generic REST adapter
+├── pipeline/
+│   ├── ingest.py          # PDF / image -&gt; PageInput
+│   ├── router.py          # Routing, retry, escalation
+│   ├── validator.py       # Schema + business rules
+│   └── telemetry.py       # Cost &amp; latency helpers
+└── serializers/
+    ├── json_serializer.py # to_json / to_dict / to_ndjson
+    └── xml_serializer.py  # to_xml (namespaces, attributes, XSD)</code></pre>
+            </div>
+        </div>
+
+        <h2 id="providers">Provider Capabilities Matrix</h2>
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Provider</th>
+                        <th>Structured JSON</th>
+                        <th>BBoxes</th>
+                        <th>PDF Native</th>
+                        <th>Max Pages / Call</th>
+                        <th>Typical Use</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr><td><strong>MockProvider</strong></td><td>Yes</td><td>Yes</td><td>-</td><td>50</td><td>Tests, demos</td></tr>
+                    <tr><td><strong>OllamaProvider</strong></td><td>Yes</td><td>-</td><td>-</td><td>4</td><td>Local privacy</td></tr>
+                    <tr><td><strong>OpenAICompatProvider</strong></td><td>Yes</td><td>-</td><td>-</td><td>8</td><td>GPT-4o, vLLM, Claude-compatible</td></tr>
+                    <tr><td><strong>HttpOCRProvider</strong></td><td>Yes</td><td>Yes</td><td>Configurable</td><td>Configurable</td><td>Docling, MinerU, PaddleOCR-VL</td></tr>
+                </tbody>
+            </table>
+        </div>
+
+        <h2 id="validation">Error Handling &amp; Validation</h2>
+        <div class="use-case-card">
+            <div class="code-wrapper">
+                <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+                <pre><code>from docstruct import ValidationError, ProviderError
+
+try:
+    result = client.extract("bad.pdf", schema=Invoice)
+except ValidationError as e:
+    print(e.errors)
+    print(e.attempts)
+except ProviderError as e:
+    print(e.provider, e.status_code)</code></pre>
+            </div>
+        </div>
+        <p>Validation is <strong>never silent</strong>. Every <code class="inline">ExtractionResult</code> carries a <code class="inline">ValidationReport</code>:</p>
+        <div class="use-case-card">
+            <div class="code-wrapper">
+                <pre><code>result.validation.is_valid     # bool
+result.validation.errors       # list[str]
+result.validation.attempts     # int
+result.validation.rules_failed</code></pre>
+            </div>
+        </div>
+
+        <h2 id="cli">CLI</h2>
+        <div class="use-case-card">
+            <div class="code-wrapper">
+                <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+                <pre><code># JSON with telemetry
+docstruct extract invoice.pdf --schema schema.json --format json -o out.json
+
+# XML
+docstruct extract invoice.pdf --format xml --root-tag Invoice -o out.xml
+
+# Using Ollama
+docstruct extract scan.png --provider ollama --format json</code></pre>
+            </div>
+        </div>
+
+        <h2 id="playground">Playground</h2>
+        <p>
+            Test docstruct against real PDFs and images with the Streamlit playground.
+            It supports MockProvider (offline demo), Ollama, and OpenAI-compatible endpoints.
+        </p>
+        <div class="use-case-card">
+            <div class="code-wrapper">
+                <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+                <pre><code>pip install "docstruct[pdf]" streamlit
+streamlit run examples/playground.py</code></pre>
+            </div>
+        </div>
+        <p>
+            Upload a PDF or image, pick a provider, optionally paste a JSON Schema,
+            then extract to JSON or XML in the browser.
+        </p>
+
+        <h2 id="license">License</h2>
+        <p>MIT License. See the repository <code class="inline">LICENSE</code> file.</p>
+
+        <footer>
+            <span>docstruct v0.1.0 | Author: <a href="https://www.linkedin.com/in/thekakodkar/" target="_blank" rel="noopener noreferrer" style="color:inherit;text-decoration:underline;">Niraj Kakodkar</a> | <a href="#license" style="color:inherit;text-decoration:underline;">MIT License</a></span>
+            <div class="footer-links">
+                <a href="https://github.com/thekakodkar/docstruct" target="_blank" rel="noopener noreferrer">GitHub</a>
+                <a href="https://pypi.org/project/docstruct/" target="_blank" rel="noopener noreferrer">PyPI</a>
+                <a href="https://www.linkedin.com/in/thekakodkar/" target="_blank" rel="noopener noreferrer">LinkedIn</a>
+            </div>
+        </footer>
+    </div>
+</main>
+
+<script>
+    const sidebarToggle = document.getElementById("sidebarToggle");
+    if (localStorage.getItem("docstruct_sidebar_collapsed") === "true") {
+        document.body.classList.add("sidebar-collapsed");
+    }
+
+    sidebarToggle.addEventListener("click", () => {
+        document.body.classList.toggle("sidebar-collapsed");
+        localStorage.setItem(
+            "docstruct_sidebar_collapsed",
+            document.body.classList.contains("sidebar-collapsed")
+        );
+    });
+
+    const mobileMenuBtn = document.getElementById("mobileMenuBtn");
+    const mobileCloseBtn = document.getElementById("mobileCloseBtn");
+    const sidebarBackdrop = document.getElementById("sidebarBackdrop");
+    const navLinks = document.querySelectorAll("aside a.nav-link");
+
+    function openMobileNav() {
+        document.body.classList.add("mobile-nav-open");
+        sidebarBackdrop.classList.add("active");
+    }
+
+    function closeMobileNav() {
+        document.body.classList.remove("mobile-nav-open");
+        sidebarBackdrop.classList.remove("active");
+    }
+
+    mobileMenuBtn.addEventListener("click", openMobileNav);
+    mobileCloseBtn.addEventListener("click", closeMobileNav);
+    sidebarBackdrop.addEventListener("click", closeMobileNav);
+
+    navLinks.forEach(link => {
+        link.addEventListener("click", () => {
+            if (window.innerWidth <= 960) {
+                closeMobileNav();
+            }
+        });
+    });
+
+    function copyCode(btn) {
+        const pre = btn.nextElementSibling;
+        navigator.clipboard.writeText(pre.innerText).then(() => {
+            const original = btn.textContent;
+            btn.textContent = "Copied";
+            setTimeout(() => { btn.textContent = original; }, 1500);
+        });
+    }
+</script>
+
+</body>
+</html>
