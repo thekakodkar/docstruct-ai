@@ -97,17 +97,17 @@ Also installs the `docstruct` command (same as `python -m docstruct`).
 
 ## Core Design Principles
 
-1. **Model & Runtime Agnostic**  Ollama, OpenAI-compatible servers, PaddleOCR-VL, Docling, MinerU, and cloud VLMs all implement one uniform contract.
-2. **Schema-First & Deterministic** Never trust raw LLM text. Enforce contracts with Pydantic v2 / JSON Schema and custom business rules. Targeted repair + automatic escalation on failure.
-3. **First-Class XML & JSON** Deterministic JSON, streaming NDJSON, and configurable XML (namespaces, attributes vs elements, CDATA, optional XSD).
-4. **Provenance & Telemetry** Page numbers, bounding boxes, confidence, latency, estimated cost, and full validation reports on every result.
-5. **Clean Core** Minimal dependencies. Vendor quirks stay inside provider adapters.
+1. **Model & Runtime Agnostic** - Ollama, OpenAI-compatible servers, PaddleOCR-VL, Docling, MinerU, and cloud VLMs all implement one uniform contract.
+2. **Schema-First & Deterministic** - Never trust raw LLM text. Enforce contracts with Pydantic v2 / JSON Schema and custom business rules. Targeted repair + automatic escalation on failure.
+3. **First-Class XML & JSON** - Deterministic JSON, streaming NDJSON, and configurable XML (namespaces, attributes vs elements, CDATA, optional XSD).
+4. **Provenance & Telemetry** - Page numbers, bounding boxes, confidence, latency, estimated cost, and full validation reports on every result.
+5. **Clean Core** - Minimal dependencies. Vendor quirks stay inside provider adapters.
 
 ---
 
 ## Enterprise Use Cases
 
-### Use Case 1: Local Open-Weight VLM (Ollama) Privacy First
+### Use Case 1: Local Open-Weight VLM (Ollama) - Privacy First
 
 ```python
 from docstruct import DocumentClient, OllamaProvider, RoutingPolicy
