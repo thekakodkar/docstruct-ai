@@ -49,6 +49,7 @@ class PageInput(BaseModel):
     width: int | None = None
     height: int | None = None
     mime_type: str = "image/png"
+    metadata: dict[str, Any] = Field(default_factory=dict)
 
 
 class DocumentIR(BaseModel):

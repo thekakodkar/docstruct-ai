@@ -9,7 +9,7 @@ from pydantic import BaseModel
 
 from docstruct.config import RoutingPolicy
 from docstruct.models.result import ExtractionResult
-from docstruct.pipeline.ingest import load_pages
+from docstruct.pipeline.ingest import load_native_document, load_pages
 from docstruct.pipeline.router import ExtractionRouter
 from docstruct.providers.base import BaseOCRProvider
 
@@ -43,6 +43,15 @@ class DocumentClient:
     def register_provider(self, provider: BaseOCRProvider) -> None:
         self._providers[provider.name] = provider
 
+
+    def _resolve_source(self, source: str | Path | bytes | BinaryIO):
+        """Resolve s3:// URIs to bytes when needed."""
+        if isinstance(source, str) and source.startswith("s3://"):
+            from docstruct.io.s3 import read_bytes
+
+            return read_bytes(source)
+        return source
+
     async def aextract(
         self,
         source: str | Path | bytes | BinaryIO,
@@ -55,6 +64,7 @@ class DocumentClient:
         max_pages: int | None = None,
     ) -> ExtractionResult:
         """Async extraction entry point."""
+        source = self._resolve_source(source)
         pages = load_pages(source, dpi=dpi, max_pages=max_pages)
         source_name = str(source) if isinstance(source, (str, Path)) else "document"
         policy = routing or self.default_routing
@@ -115,3 +125,18 @@ class DocumentClient:
                 max_pages=max_pages,
             )
         )
+
+    def extract_native(
+        self,
+        source: str | Path | bytes | BinaryIO,
+        *,
+        max_pages: int | None = None,
+    ) -> dict:
+        """
+        Text-first extraction for digital PDF / DOCX / PPTX without a vision model.
+
+        Returns a dict with pages, markdown, and format metadata.
+        """
+        source = self._resolve_source(source)
+        return load_native_document(source, max_pages=max_pages)
+

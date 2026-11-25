@@ -75,6 +75,23 @@ class ExtractionResult(BaseModel):
 
         return to_json(self, indent=indent, include_telemetry=include_telemetry)
 
+    def to_markdown(
+        self,
+        *,
+        title: str | None = None,
+        include_telemetry: bool = False,
+        include_validation: bool = False,
+    ) -> str:
+        """Serialize to Markdown."""
+        from docstruct.serializers.markdown_serializer import to_markdown
+
+        return to_markdown(
+            self,
+            title=title,
+            include_telemetry=include_telemetry,
+            include_validation=include_validation,
+        )
+
     def to_xml(
         self,
         *,

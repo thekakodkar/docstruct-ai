@@ -1,5 +1,4 @@
-# docstruct v0.1.0 | Enterprise Documentation & Use Case Guide
-
+# docstruct v0.2.0 
 **Model-Agnostic OCR & Structured XML/JSON Library**
 
 Python 3.11+ · Open-Weight SLMs & Cloud VLMs · Deterministic Pydantic/XSD Schema Enforcement
@@ -91,23 +90,32 @@ pip install "docstruct[cli]"
 pip install "docstruct[all]"
 ```
 
+### Supported inputs and outputs
+
+| Inputs | Outputs | Optional cloud |
+|--------|---------|----------------|
+| PDF (digital + scanned), PNG/JPEG/WebP/TIFF | JSON, NDJSON, XML, **Markdown** | **S3** read/write (`docstruct[s3]`) |
+| **DOCX**, **PPTX** (native text, stdlib) | Provenance + validation telemetry | |
+
+Native text path (no VLM): `client.extract_native("file.docx")` returns pages + markdown.
+
 Also installs the `docstruct` command (same as `python -m docstruct`).
 
 ---
 
 ## Core Design Principles
 
-1. **Model & Runtime Agnostic** — Ollama, OpenAI-compatible servers, PaddleOCR-VL, Docling, MinerU, and cloud VLMs all implement one uniform contract.
-2. **Schema-First & Deterministic** — Never trust raw LLM text. Enforce contracts with Pydantic v2 / JSON Schema and custom business rules. Targeted repair + automatic escalation on failure.
-3. **First-Class XML & JSON** — Deterministic JSON, streaming NDJSON, and configurable XML (namespaces, attributes vs elements, CDATA, optional XSD).
-4. **Provenance & Telemetry** — Page numbers, bounding boxes, confidence, latency, estimated cost, and full validation reports on every result.
-5. **Clean Core** — Minimal dependencies. Vendor quirks stay inside provider adapters.
+1. **Model & Runtime Agnostic** - Ollama, OpenAI-compatible servers, PaddleOCR-VL, Docling, MinerU, and cloud VLMs all implement one uniform contract.
+2. **Schema-First & Deterministic** - Never trust raw LLM text. Enforce contracts with Pydantic v2 / JSON Schema and custom business rules. Targeted repair + automatic escalation on failure.
+3. **First-Class XML & JSON** - Deterministic JSON, streaming NDJSON, and configurable XML (namespaces, attributes vs elements, CDATA, optional XSD).
+4. **Provenance & Telemetry** - Page numbers, bounding boxes, confidence, latency, estimated cost, and full validation reports on every result.
+5. **Clean Core** - Minimal dependencies. Vendor quirks stay inside provider adapters.
 
 ---
 
-## Every Use Case: Copy-Paste Ready
+## Enterprise Use Cases
 
-### Use Case 1: Local Open-Weight VLM (Ollama) — Privacy First
+### Use Case 1: Local Open-Weight VLM (Ollama) - Privacy First
 
 ```python
 from docstruct import DocumentClient, OllamaProvider, RoutingPolicy
