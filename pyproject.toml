@@ -1,16 +1,16 @@
 [build-system]
-requires = ["hatchling"]
+requires = ["hatchling>=1.24.2,<1.27"]
 build-backend = "hatchling.build"
 
 [project]
-name = "docstruct"
+name = "docstruct-ai"
 version = "0.2.0"
 description = "Model-agnostic OCR & structured XML/JSON extraction library. Open-weight SLMs, cloud VLMs, deterministic Pydantic/XSD schema enforcement."
 readme = "README.md"
 requires-python = ">=3.11"
-license = { text = "MIT" }
+license = "MIT"
 authors = [
-    { name = "docstruct contributors" }
+    { name = "Niraj Kakodkar" }
 ]
 keywords = [
     "ocr",
@@ -77,14 +77,14 @@ dev = [
     "types-Pillow",
 ]
 all = [
-    "docstruct[pdf,office,xml,s3,cli,playground,dev]",
+    "docstruct-ai[pdf,office,xml,s3,cli,playground,dev]",
 ]
 
 [project.urls]
-Homepage = "https://github.com/thekakodkar/docstruct"
-Documentation = "https://thekakodkar.github.io/docstruct/"
-Repository = "https://github.com/thekakodkar/docstruct"
-Issues = "https://github.com/thekakodkar/docstruct/issues"
+Homepage = "https://github.com/thekakodkar/docstruct-ai"
+Documentation = "https://thekakodkar.github.io/docstruct-ai/"
+Repository = "https://github.com/thekakodkar/docstruct-ai"
+Issues = "https://github.com/thekakodkar/docstruct-ai/issues"
 
 [project.scripts]
 docstruct = "docstruct.cli:app"
