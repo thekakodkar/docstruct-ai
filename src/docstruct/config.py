@@ -23,5 +23,7 @@ class RoutingPolicy(BaseModel):
     escalate_on_low_confidence: float | None = None
     timeout_seconds: float = 120.0
     prefer_local: bool = True
+    backoff_base_seconds: float = 0.5
+    backoff_max_seconds: float = 8.0
 
     model_config = {"arbitrary_types_allowed": True}

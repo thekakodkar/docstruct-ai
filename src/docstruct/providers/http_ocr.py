@@ -17,6 +17,9 @@ class HttpOCRProvider(BaseOCRProvider):
     """
     Flexible HTTP adapter.
 
+    Security: the endpoint URL is caller-controlled. Do not pass
+    untrusted URLs (SSRF risk). Prefer allow-listed internal OCR services.
+
     Expects the remote service to accept a JSON body containing base64 images
     (or multipart) and return a JSON object that can be treated as the extraction result.
     """

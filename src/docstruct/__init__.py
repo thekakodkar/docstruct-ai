@@ -23,7 +23,7 @@ from docstruct.providers.native import NativeTextProvider
 from docstruct.providers.ollama import OllamaProvider
 from docstruct.providers.openai_compat import OpenAICompatProvider
 
-__version__ = "0.2.0"
+__version__ = "1.0.0"
 
 __all__ = [
     "DocumentClient",
@@ -49,5 +49,32 @@ __all__ = [
     "OllamaProvider",
     "OpenAICompatProvider",
     "HttpOCRProvider",
+    "extract",
     "__version__",
 ]
+
+
+def extract(source, schema=None, *, provider: str = "mock", **kwargs):
+    """
+    Minimal one-call extraction.
+
+    Examples
+    --------
+    >>> from docstruct import extract
+    >>> result = extract("invoice.pdf", schema=Invoice)  # mock demo
+    >>> result = extract("scan.png", schema=Invoice, provider="ollama")
+    """
+    if provider == "mock":
+        client = DocumentClient.mock()
+    elif provider == "ollama":
+        client = DocumentClient.ollama()
+    elif provider in {"openai", "openai_compat"}:
+        client = DocumentClient.openai()
+    elif provider == "native":
+        client = DocumentClient(
+            providers=[NativeTextProvider()],
+            default_routing=RoutingPolicy(primary_provider="native"),
+        )
+    else:
+        raise ValueError(f"Unknown provider shortcut: {provider!r}. Use DocumentClient(...).")
+    return client.extract(source, schema=schema, **kwargs)

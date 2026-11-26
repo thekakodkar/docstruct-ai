@@ -1,27 +1,25 @@
-# docstruct-ai v0.2.0 
-**Model-Agnostic OCR & Structured XML/JSON Library**
+# docstruct-ai v1.0.0
 
-Documentation https://thekakodkar.github.io/docstruct-ai/
+**Model-agnostic OCR and structured extraction for PDFs, images, DOCX, and PPTX.**
 
-<img width="769" height="336" alt="image" src="https://github.com/user-attachments/assets/5851aa9b-7041-4cd7-b823-61e7a11085a1" />
+Python 3.11+ · Open-weight SLMs and cloud VLMs · Deterministic Pydantic / XSD enforcement
 
+[![PyPI](https://img.shields.io/pypi/v/docstruct-ai.svg)](https://pypi.org/project/docstruct-ai/)
+[![Python](https://img.shields.io/pypi/pyversions/docstruct-ai.svg)](https://pypi.org/project/docstruct-ai/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 
-Python 3.11+ · Open-Weight SLMs & Cloud VLMs · Deterministic Pydantic/XSD Schema Enforcement
+- **PyPI:** https://pypi.org/project/docstruct-ai/
+- **GitHub:** https://github.com/thekakodkar/docstruct-ai
+- **Docs:** https://thekakodkar.github.io/docstruct-ai/
 
----
-
-# docstruct-ai: Extract Structured Data from Any Document
-
-Turn PDFs, scanned pages, and images into **validated JSON, streaming NDJSON, or compliant XML** with a single unified interface. Swap local open-weight VLMs (Ollama, vLLM, LM Studio) and cloud vision APIs without changing your application code. Every extraction is schema-enforced, provenance-tracked, and ready for downstream systems.
-
-**Schema-First** · **Provider Agnostic** · **Local-First Routing** · **Full Provenance** · **XML + JSON Native** · **Zero Hard-Coded Vendor Logic**
+Install as `docstruct-ai`. Import as `docstruct`.
 
 ---
 
-## Extract an Invoice in 4 Lines
+## Extract an invoice in 4 lines
 
 ```python
-from docstruct-ai import DocumentClient, MockProvider, RoutingPolicy
+from docstruct import DocumentClient, MockProvider, RoutingPolicy
 from pydantic import BaseModel
 
 class Invoice(BaseModel):
@@ -37,123 +35,155 @@ client = DocumentClient(
 result = client.extract("invoice.pdf", schema=Invoice)
 print(result.to_json())
 print(result.to_xml(root_tag="Invoice", list_item_tags={"lines": "Line"}))
-```
-
-**Output (abridged):**
-
-```json
-{
-  "currency": "USD",
-  "invoice_number": "INV-1001",
-  "total": 1250.0,
-  "vendor": "ACME Corp"
-}
-```
-
-```xml
-<?xml version="1.0" ?>
-<Invoice>
-  <vendor>ACME Corp</vendor>
-  <invoice_number>INV-1001</invoice_number>
-  <total>1250.0</total>
-  <currency>USD</currency>
-</Invoice>
+print(result.to_markdown(title="Invoice"))
 ```
 
 ---
 
-## Which Method Should I Use?
 
-| Your Use Case | Function / Method | Return Type | Best For |
-|---|---|---|---|
-| **One-shot extraction with schema** | `client.extract(path, schema=Model)` | `ExtractionResult` | Most applications – start here |
-| **Async high-throughput** | `await client.aextract(...)` | `ExtractionResult` | FastAPI, batch workers, concurrent pipelines |
-| **Validated Python objects** | `result.data` | `BaseModel` or `dict` | Business logic, DB inserts |
-| **Clean JSON string** | `result.to_json()` | `str` | APIs, document stores, logging |
-| **Streaming NDJSON** | `to_ndjson([result, ...])` | `str` | Snowflake, Databricks, Kafka, RAG |
-| **Compliant XML** | `result.to_xml(root_tag=..., list_item_tags=...)` | `str` | ERP, EDI, legacy integrations, XSD |
-| **Full audit trail** | `result.telemetry` / `result.validation` | models | Governance, cost tracking, retries |
+## What is new in 1.0.0
+
+- Stable public API and versioned release
+- One-call `extract()` plus `DocumentClient.ollama()` / `.openai()` / `.mock()`
+- Exponential backoff on provider and validation retries
+- Batch extraction via `client.extract_batch([...])`
+- Safer defaults: file size cap, page cap, Office zip bomb guard
+- Markdown, native DOCX/PPTX, optional S3
+
+## Minimal usage
+
+```python
+from docstruct import extract
+from pydantic import BaseModel
+
+class Invoice(BaseModel):
+    vendor: str
+    total: float
+
+# Offline demo (no model server)
+result = extract("invoice.pdf", schema=Invoice)
+
+# Local Ollama
+result = extract("scan.png", schema=Invoice, provider="ollama")
+
+# OpenAI-compatible (reads OPENAI_API_KEY from the environment)
+result = extract("form.pdf", schema=Invoice, provider="openai")
+
+print(result.to_json())
+```
+
+Or construct a client once:
+
+```python
+from docstruct import DocumentClient
+
+client = DocumentClient.ollama()          # or .openai() / .mock()
+result = client.extract("invoice.pdf", schema=Invoice)
+```
+
+## Which method should I use?
+
+| Your use case | Method | Best for |
+|---|---|---|
+| One-shot extraction with schema | `client.extract(path, schema=Model)` | Most apps |
+| Async high-throughput | `await client.aextract(...)` | FastAPI, workers |
+| Native text only (no VLM) | `client.extract_native(path)` | Digital PDF / DOCX / PPTX |
+| Validated objects | `result.data` | Business logic |
+| JSON | `result.to_json()` | APIs |
+| NDJSON | `to_ndjson([result, ...])` | Lakehouse, Kafka |
+| XML | `result.to_xml(...)` | ERP, EDI, XSD |
+| Markdown | `result.to_markdown()` | Docs, RAG |
+| Audit trail | `result.telemetry` / `result.validation` | Governance |
 
 ---
 
 ## Installation
 
 ```bash
-# Core library (Pydantic + httpx + Pillow)
+# Core (Pydantic + httpx + Pillow)
 pip install docstruct-ai
 
-# With PDF rendering (PyMuPDF)
+# PDF rendering (PyMuPDF)
 pip install "docstruct-ai[pdf]"
 
-# With XSD validation (lxml)
+# XSD validation (lxml)
 pip install "docstruct-ai[xml]"
+
+# S3 read/write (boto3)
+pip install "docstruct-ai[s3]"
 
 # CLI
 pip install "docstruct-ai[cli]"
+
+# Streamlit playground
+pip install "docstruct-ai[playground]"
 
 # Everything
 pip install "docstruct-ai[all]"
 ```
 
+Also installs the `docstruct` CLI (`python -m docstruct`).
+
 ### Supported inputs and outputs
 
 | Inputs | Outputs | Optional cloud |
 |--------|---------|----------------|
-| PDF (digital + scanned), PNG/JPEG/WebP/TIFF | JSON, NDJSON, XML, **Markdown** | **S3** read/write (`docstruct-ai[s3]`) |
-| **DOCX**, **PPTX** (native text, stdlib) | Provenance + validation telemetry | |
+| PDF (digital + scanned), PNG/JPEG/WebP/TIFF | JSON, NDJSON, XML, Markdown | S3 (`docstruct-ai[s3]`) |
+| DOCX, PPTX (native text via stdlib) | Provenance + validation telemetry | |
 
-Native text path (no VLM): `client.extract_native("file.docx")` returns pages + markdown.
-
-Also installs the `docstruct-ai` command (same as `python -m docstruct-ai`).
-
----
-
-## Core Design Principles
-
-1. **Model & Runtime Agnostic** - Ollama, OpenAI-compatible servers, PaddleOCR-VL, Docling, MinerU, and cloud VLMs all implement one uniform contract.
-2. **Schema-First & Deterministic** - Never trust raw LLM text. Enforce contracts with Pydantic v2 / JSON Schema and custom business rules. Targeted repair + automatic escalation on failure.
-3. **First-Class XML & JSON** - Deterministic JSON, streaming NDJSON, and configurable XML (namespaces, attributes vs elements, CDATA, optional XSD).
-4. **Provenance & Telemetry** - Page numbers, bounding boxes, confidence, latency, estimated cost, and full validation reports on every result.
-5. **Clean Core** - Minimal dependencies. Vendor quirks stay inside provider adapters.
-
----
-
-## Enterprise Use Cases
-
-### Use Case 1: Local Open-Weight VLM (Ollama) - Privacy First
+Native text path (no VLM):
 
 ```python
-from docstruct-ai import DocumentClient, OllamaProvider, RoutingPolicy
-from pydantic import BaseModel, Field
+client.extract_native("report.docx")  # pages + markdown
+```
 
-class LineItem(BaseModel):
-    description: str
-    qty: float
-    unit_price: float
-    amount: float
+S3:
+
+```python
+from docstruct.io import read_bytes, write_extraction
+
+data = read_bytes("s3://bucket/in/invoice.pdf")
+write_extraction(result, "s3://bucket/out/invoice.json", format="json")
+```
+
+---
+
+## Design principles
+
+1. **Model and runtime agnostic** - Ollama, OpenAI-compatible servers, Docling, MinerU, and cloud VLMs share one contract.
+2. **Schema-first and deterministic** - Pydantic v2 / JSON Schema, business rules, repair, and escalation.
+3. **JSON, XML, and Markdown** - Deterministic JSON, NDJSON, configurable XML, Markdown export.
+4. **Provenance and telemetry** - Pages, bboxes, confidence, latency, cost, validation reports.
+5. **Clean core** - Optional extras for PDF, XML, S3, CLI, and playground.
+
+---
+
+## Use cases
+
+### 1. Local open-weight VLM (Ollama)
+
+```python
+from docstruct import DocumentClient, OllamaProvider, RoutingPolicy
+from pydantic import BaseModel
 
 class Invoice(BaseModel):
     vendor: str
     invoice_number: str
     total: float
     currency: str = "USD"
-    lines: list[LineItem] = []
 
 client = DocumentClient(
-    providers=[
-        OllamaProvider(model="qwen2.5vl:7b", base_url="http://localhost:11434"),
-    ],
+    providers=[OllamaProvider(model="qwen2.5vl:7b")],
     default_routing=RoutingPolicy(primary_provider="ollama"),
 )
-
 result = client.extract("scanned_invoice.pdf", schema=Invoice)
 print(result.to_json(include_telemetry=True))
 ```
 
-### Use Case 2: Local-First with Cloud Fallback
+### 2. Local-first with cloud fallback
 
 ```python
-from docstruct-ai import (
+from docstruct import (
     DocumentClient, OllamaProvider, OpenAICompatProvider, RoutingPolicy
 )
 
@@ -173,18 +203,16 @@ client = DocumentClient(
         escalate_on_low_confidence=0.7,
     ),
 )
-
 result = client.extract("complex_form.pdf", schema=MySchema)
 ```
 
-### Use Case 3: Custom Business Validation Rules
+### 3. Custom business rules
 
 ```python
-from docstruct-ai.models.ir import DocumentIR
+from docstruct.models.ir import DocumentIR
 from pydantic import BaseModel
 
 def check_line_items_sum_to_total(data: BaseModel, ir: DocumentIR) -> list[str]:
-    """Return a list of error messages (empty = pass)."""
     if not hasattr(data, "lines") or not hasattr(data, "total"):
         return []
     calculated = sum(line.amount for line in data.lines)
@@ -192,17 +220,10 @@ def check_line_items_sum_to_total(data: BaseModel, ir: DocumentIR) -> list[str]:
         return [f"Line items sum ({calculated}) does not equal total ({data.total})"]
     return []
 
-result = client.extract(
-    "invoice.pdf",
-    schema=Invoice,
-    rules=[check_line_items_sum_to_total],
-)
-
-if not result.validation.is_valid:
-    print("Validation failed:", result.validation.errors)
+result = client.extract("invoice.pdf", schema=Invoice, rules=[check_line_items_sum_to_total])
 ```
 
-### Use Case 4: XML Export with Namespaces & Attributes
+### 4. XML with namespaces and attributes
 
 ```python
 xml = result.to_xml(
@@ -212,125 +233,90 @@ xml = result.to_xml(
     namespaces={"inv": "http://example.com/invoice/v1"},
     pretty=True,
 )
-print(xml)
 ```
 
-### Use Case 5: Streaming NDJSON for Lakehouse / RAG
+### 5. Streaming NDJSON
 
 ```python
-from docstruct-ai.serializers import to_ndjson
+from docstruct.serializers import to_ndjson
 
 results = [client.extract(f) for f in pdf_files]
-ndjson_stream = to_ndjson(results, include_telemetry=False)
-
 with open("invoices.ndjson", "w", encoding="utf-8") as f:
-    f.write(ndjson_stream)
+    f.write(to_ndjson(results))
 ```
 
-### Use Case 6: Generic HTTP OCR Service (Docling / MinerU / PaddleOCR-VL)
+### 6. Generic HTTP OCR (Docling / MinerU / PaddleOCR-VL)
 
 ```python
-from docstruct-ai import DocumentClient, HttpOCRProvider, RoutingPolicy
+from docstruct import DocumentClient, HttpOCRProvider, RoutingPolicy
 
 client = DocumentClient(
-    providers=[
-        HttpOCRProvider(
-            endpoint="http://localhost:8000/extract",
-            name="docling",
-        ),
-    ],
+    providers=[HttpOCRProvider(endpoint="http://localhost:8000/extract", name="docling")],
     default_routing=RoutingPolicy(primary_provider="docling"),
 )
 ```
 
-### Use Case 7: CLI
+### 7. CLI
 
 ```bash
-# JSON with telemetry
-docstruct-ai extract invoice.pdf --schema schema.json --format json -o out.json
+docstruct extract invoice.pdf --schema schema.json --format json -o out.json
+docstruct extract invoice.pdf --format xml --root-tag Invoice -o out.xml
+docstruct extract scan.png --provider ollama --format json
+```
 
-# XML
-docstruct-ai extract invoice.pdf --format xml --root-tag Invoice -o out.xml
+### 8. Playground (real PDFs)
 
-# Using Ollama
-docstruct-ai extract scan.png --provider ollama --format json
+```bash
+pip install "docstruct-ai[pdf,playground]"
+streamlit run examples/playground.py
 ```
 
 ---
 
-## Architecture Overview
+## Architecture
 
 ```
-docstruct-ai/
-├── client.py              # DocumentClient – public entry point
+docstruct/
+├── client.py              # DocumentClient
 ├── config.py              # RoutingPolicy
-├── models/
-│   ├── ir.py              # DocumentIR, PageIR, Block, BBox
-│   ├── result.py          # ExtractionResult, Telemetry, ValidationReport
-│   └── schema.py          # Pydantic / JSON Schema normalization
-├── providers/
-│   ├── base.py            # BaseOCRProvider + ProviderCapabilities
-│   ├── mock.py            # Deterministic test double
-│   ├── ollama.py          # Local Ollama VLM
-│   ├── openai_compat.py   # vLLM, LM Studio, OpenAI, Azure…
-│   └── http_ocr.py        # Generic REST adapter
-├── pipeline/
-│   ├── ingest.py          # PDF / image → PageInput
-│   ├── router.py          # Routing, retry, escalation
-│   ├── validator.py       # Schema + business rules
-│   └── telemetry.py       # Cost & latency helpers
-└── serializers/
-    ├── json_serializer.py # to_json / to_dict / to_ndjson
-    └── xml_serializer.py  # to_xml (namespaces, attributes, XSD)
+├── io/s3.py               # Optional S3 helpers
+├── models/                # IR, result, schema
+├── providers/             # mock, native, ollama, openai_compat, http_ocr
+├── pipeline/              # ingest, router, validator, telemetry
+└── serializers/           # json, xml, markdown
 ```
 
 ---
 
-## Intermediate Representation (IR)
+## Provider matrix
 
-All providers produce a vendor-neutral IR before schema validation:
-
-| Model | Key Fields |
-|---|---|
-| **BBox** | `x0, y0, x1, y1`, `coordinate_space` (`normalized` \| `pixel`), `page_number` |
-| **Block** | `block_id`, `kind` (text/heading/table/key_value/…), `content`, `bbox`, `confidence` |
-| **PageIR** | `page_number`, `width`, `height`, `blocks`, `raw_text` |
-| **DocumentIR** | `source_name`, `page_count`, `pages`, `raw_markdown`, `provider_metadata` |
-
----
-
-## Provider Capabilities Matrix
-
-| Provider | Structured JSON | BBoxes | PDF Native | Max Pages / Call | Typical Use |
-|---|---|---|---|---|---|
-| **MockProvider** | ✅ | ✅ |   | 50 | Tests, demos |
-| **OllamaProvider** | ✅ |   |   | 4 | Local privacy |
-| **OpenAICompatProvider** | ✅ |   |   | 8 | GPT-4o, vLLM, Claude-compatible |
-| **HttpOCRProvider** | ✅ | ✅ | Configurable | Configurable | Docling, MinerU, PaddleOCR-VL |
+| Provider | Structured JSON | BBoxes | PDF native | Typical use |
+|---|---|---|---|---|
+| MockProvider | Yes | Yes | - | Tests, demos |
+| NativeTextProvider | Yes | - | Yes | Digital PDF / DOCX / PPTX |
+| OllamaProvider | Yes | - | - | Local privacy |
+| OpenAICompatProvider | Yes | - | - | GPT-4o, vLLM, LM Studio |
+| HttpOCRProvider | Yes | Yes | Configurable | Docling, MinerU, PaddleOCR-VL |
 
 ---
 
-## Error Handling & Validation
+## Error handling
 
 ```python
-from docstruct-ai import ValidationError, ProviderError
+from docstruct import ValidationError, ProviderError
 
 try:
     result = client.extract("bad.pdf", schema=Invoice)
 except ValidationError as e:
-    print(e.errors)      # list of human-readable messages
-    print(e.attempts)    # how many tries were made
+    print(e.errors, e.attempts)
 except ProviderError as e:
     print(e.provider, e.status_code)
 ```
 
-Validation is **never silent**. Every `ExtractionResult` carries a `ValidationReport`:
-
 ```python
-result.validation.is_valid   # bool
-result.validation.errors     # list[str]
-result.validation.attempts   # int
-result.validation.rules_failed
+result.validation.is_valid
+result.validation.errors
+result.validation.attempts
 ```
 
 ---
@@ -338,19 +324,25 @@ result.validation.rules_failed
 ## Testing
 
 ```bash
-pip install "docstruct-ai[dev]"
-pytest tests/ -q
+pip install -e ".[dev]"
+pytest
 ```
 
-The suite covers MockProvider single/multi-page runs, retry & fallback escalation, JSON/NDJSON/XML edge cases (attributes, namespaces, escaping), and HTTP error handling.
-
 ---
+
+## Where this fits
+
+docstruct-ai is a **thin orchestration layer** (ingest, route, validate, serialize). It is not a full document AI platform.
+
+| Tool | Strength | Overlap |
+|------|----------|---------|
+| **docstruct-ai** | Schema-first extraction, multi-provider routing, JSON/XML/MD, native Office text | You are here |
+| Unstructured / LlamaParse | Broad connectors, hosted parsing | Heavier; less schema-deterministic |
+| Docling / MinerU | Strong layout PDF parsing | Use via `HttpOCRProvider` |
+| BODtoJSON | Infor OAGIS BOD → flat JSON | Complementary downstream of extraction |
+
+Best when you want **small dependency surface**, **Pydantic contracts**, and **swap models without rewriting app code**.
 
 ## License
 
-MIT License. See [LICENSE](LICENSE).
-
----
-
-**Documentation site:** [https://thekakodkar.github.io/docstruct-ai/](https://thekakodkar.github.io/docstruct-ai/)  
-**Repository:** [https://github.com/thekakodkar/docstruct-ai](https://github.com/thekakodkar/docstruct-ai)
+MIT License. Author: [Niraj Kakodkar](https://www.linkedin.com/in/thekakodkar/).

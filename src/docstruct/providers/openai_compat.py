@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import base64
 import json
+import os
 import time
 from typing import Any
 
@@ -31,7 +32,7 @@ class OpenAICompatProvider(BaseOCRProvider):
     ) -> None:
         self.model = model
         self.base_url = base_url.rstrip("/")
-        self.api_key = api_key
+        self.api_key = api_key or os.getenv("OPENAI_API_KEY") or os.getenv("DOCSTRUCT_API_KEY")
         self.timeout = timeout
         self.temperature = temperature
         self.max_tokens = max_tokens

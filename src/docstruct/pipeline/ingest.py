@@ -13,6 +13,11 @@ from PIL import Image
 
 from docstruct.models.ir import PageInput
 
+# Safety defaults (override via load_pages kwargs)
+DEFAULT_MAX_FILE_BYTES = 50 * 1024 * 1024  # 50 MB
+DEFAULT_MAX_PAGES = 100
+MAX_ZIP_UNCOMPRESSED = 80 * 1024 * 1024  # 80 MB uncompressed office zip
+
 
 def load_pages(
     source: str | Path | bytes | BinaryIO,
@@ -20,6 +25,7 @@ def load_pages(
     dpi: int = 200,
     max_pages: int | None = None,
     prefer_native_text: bool = True,
+    max_file_bytes: int = DEFAULT_MAX_FILE_BYTES,
 ) -> list[PageInput]:
     """
     Convert document input into a list of PageInput records.
@@ -43,6 +49,15 @@ def load_pages(
         data = source.read()
         source_name = getattr(source, "name", "stream")
         suffix = _guess_suffix(data)
+
+    if max_file_bytes and len(data) > max_file_bytes:
+        raise ValueError(
+            f"File too large ({len(data)} bytes). Max allowed is {max_file_bytes} bytes "
+            f"(pass max_file_bytes=... to raise the limit)."
+        )
+
+    if max_pages is None:
+        max_pages = DEFAULT_MAX_PAGES
 
     if suffix == ".pdf":
         return _pdf_to_pages(
@@ -180,6 +195,16 @@ def _pdf_native_text(data: bytes, *, max_pages: int | None) -> list[dict[str, An
     return out
 
 
+
+def _assert_safe_zip(zf: zipfile.ZipFile) -> None:
+    total = 0
+    for info in zf.infolist():
+        total += info.file_size
+        if total > MAX_ZIP_UNCOMPRESSED:
+            raise ValueError(
+                f"Office archive uncompressed size exceeds safety limit ({MAX_ZIP_UNCOMPRESSED} bytes)"
+            )
+
 def _docx_to_pages(
     data: bytes,
     *,
@@ -191,6 +216,7 @@ def _docx_to_pages(
         zf = zipfile.ZipFile(io.BytesIO(data))
     except zipfile.BadZipFile as exc:
         raise ValueError("Invalid DOCX file") from exc
+    _assert_safe_zip(zf)
 
     try:
         xml_bytes = zf.read("word/document.xml")
@@ -252,6 +278,7 @@ def _pptx_to_pages(
         zf = zipfile.ZipFile(io.BytesIO(data))
     except zipfile.BadZipFile as exc:
         raise ValueError("Invalid PPTX file") from exc
+    _assert_safe_zip(zf)
 
     slide_names = sorted(
         n for n in zf.namelist() if n.startswith("ppt/slides/slide") and n.endswith(".xml")

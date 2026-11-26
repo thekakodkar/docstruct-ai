@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 import time
 from typing import Any
 
@@ -66,6 +67,12 @@ class ExtractionRouter:
                 except ProviderError as exc:
                     last_errors = [str(exc)]
                     telemetry.retries += 1
+                    delay = min(
+                        self.policy.backoff_base_seconds * (2 ** attempt),
+                        self.policy.backoff_max_seconds,
+                    )
+                    if delay > 0:
+                        await asyncio.sleep(delay)
                     continue
 
                 latency = (time.perf_counter() - t0) * 1000
@@ -129,8 +136,14 @@ class ExtractionRouter:
                 last_errors = report.errors
                 last_raw = content
                 telemetry.retries += 1
+                delay = min(
+                    self.policy.backoff_base_seconds * (2 ** attempt),
+                    self.policy.backoff_max_seconds,
+                )
+                if delay > 0 and attempt < self.policy.max_retries_per_provider:
+                    await asyncio.sleep(delay)
 
-            # exhausted retries for this provider → escalate
+            # exhausted retries for this provider - escalate
             telemetry.escalations += 1
 
         raise ValidationError(

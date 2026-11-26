@@ -43,6 +43,48 @@ class DocumentClient:
     def register_provider(self, provider: BaseOCRProvider) -> None:
         self._providers[provider.name] = provider
 
+    @classmethod
+    def ollama(
+        cls,
+        model: str = "qwen2.5vl:7b",
+        base_url: str = "http://localhost:11434",
+        **routing_kwargs: Any,
+    ) -> "DocumentClient":
+        """One-liner client for local Ollama."""
+        from docstruct.providers.ollama import OllamaProvider
+
+        return cls(
+            providers=[OllamaProvider(model=model, base_url=base_url)],
+            default_routing=RoutingPolicy(primary_provider="ollama", **routing_kwargs),
+        )
+
+    @classmethod
+    def openai(
+        cls,
+        model: str = "gpt-4o",
+        api_key: str | None = None,
+        base_url: str = "https://api.openai.com/v1",
+        **routing_kwargs: Any,
+    ) -> "DocumentClient":
+        """One-liner client for OpenAI-compatible endpoints (api_key from env if omitted)."""
+        from docstruct.providers.openai_compat import OpenAICompatProvider
+
+        return cls(
+            providers=[OpenAICompatProvider(model=model, base_url=base_url, api_key=api_key)],
+            default_routing=RoutingPolicy(primary_provider="openai_compat", **routing_kwargs),
+        )
+
+    @classmethod
+    def mock(cls) -> "DocumentClient":
+        """Deterministic offline client for tests and demos."""
+        from docstruct.providers.mock import MockProvider
+
+        return cls(
+            providers=[MockProvider()],
+            default_routing=RoutingPolicy(primary_provider="mock"),
+        )
+
+
 
     def _resolve_source(self, source: str | Path | bytes | BinaryIO):
         """Resolve s3:// URIs to bytes when needed."""
@@ -125,6 +167,40 @@ class DocumentClient:
                 max_pages=max_pages,
             )
         )
+
+
+    def extract_batch(
+        self,
+        sources: list,
+        *,
+        schema=None,
+        rules=None,
+        routing=None,
+        prompt_hint=None,
+        dpi: int = 200,
+        max_pages=None,
+        continue_on_error: bool = True,
+    ) -> list:
+        """Extract many documents. Returns ExtractionResult or Exception per item if continue_on_error."""
+        out = []
+        for src in sources:
+            try:
+                out.append(
+                    self.extract(
+                        src,
+                        schema=schema,
+                        rules=rules,
+                        routing=routing,
+                        prompt_hint=prompt_hint,
+                        dpi=dpi,
+                        max_pages=max_pages,
+                    )
+                )
+            except Exception as exc:
+                if not continue_on_error:
+                    raise
+                out.append(exc)
+        return out
 
     def extract_native(
         self,

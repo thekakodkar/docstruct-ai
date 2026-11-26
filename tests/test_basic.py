@@ -113,3 +113,32 @@ def test_validation_failure_and_retry():
     with pytest.raises(ValidationError) as exc:
         client.extract(buf.getvalue(), schema=Invoice, rules=[bad_rule])
     assert "forced failure" in str(exc.value.errors)
+
+
+def test_version_is_1_0_0():
+    import docstruct
+    assert docstruct.__version__ == "1.0.0"
+
+
+def test_extract_batch_and_one_liner():
+    import io
+    from PIL import Image
+    from pydantic import BaseModel
+    from docstruct import DocumentClient, extract
+
+    class Inv(BaseModel):
+        vendor: str
+        total: float
+
+    def png():
+        b = io.BytesIO()
+        Image.new("RGB", (8, 8), "white").save(b, format="PNG")
+        return b.getvalue()
+
+    r = extract(png(), schema=Inv, provider="mock")
+    assert r.data.vendor
+
+    client = DocumentClient.mock()
+    out = client.extract_batch([png(), png()], schema=Inv)
+    assert len(out) == 2
+    assert all(hasattr(x, "data") for x in out)
